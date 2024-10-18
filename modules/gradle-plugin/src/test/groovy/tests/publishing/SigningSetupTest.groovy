@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
 class SigningSetupTest {
-    private static final String TESTER_PRIVATE_KEY = """
+    public static final String TESTER_PRIVATE_KEY = """
 -----BEGIN PGP PRIVATE KEY BLOCK-----
 
 xcASBGcSuXYTBSuBBAAiAwMERiHVqcYuCPAyhUo475wsbglVfO75B208wAX+hW/C
@@ -42,15 +42,16 @@ cermW8rb0eLpVD6EzZ/9vb++JddGm66qC3s3hSsza6EAvUuavA==
 
     private static final String TESTER_KEY_PASSWORD = "Tester"
 
+    public static String getConfig() {
+        def configuration = new SignSetupConfiguration();
+        configuration.key = TESTER_PRIVATE_KEY
+        configuration.keyPassword = TESTER_KEY_PASSWORD
+
+        return new Gson().toJson(configuration)
+    }
+
     @Nested
     class Integration extends BaseIntegrationTest {
-        String getConfig() {
-            def configuration = new SignSetupConfiguration();
-            configuration.key = TESTER_PRIVATE_KEY
-            configuration.keyPassword = TESTER_KEY_PASSWORD
-
-            return new Gson().toJson(configuration)
-        }
 
         @Test
         void testPluginApply() {

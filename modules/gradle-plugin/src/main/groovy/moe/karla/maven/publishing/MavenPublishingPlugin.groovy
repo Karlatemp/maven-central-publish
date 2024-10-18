@@ -3,6 +3,12 @@ package moe.karla.maven.publishing
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.publish.PublishingExtension
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.tasks.bundling.Zip
+
+import java.nio.file.Files
+import java.util.regex.Pattern
 
 class MavenPublishingPlugin implements Plugin<Project> {
     @Override
@@ -19,9 +25,140 @@ class MavenPublishingPlugin implements Plugin<Project> {
             apply plugin: SigningSetupPlugin.class
         }
 
+        def cacheRepoLocation = rootProject.layout.buildDirectory.get()
+                .dir('maven-publishing-stage')
+                .asFile
+
 
         def ext = rootProject.extensions.create('mavenPublishing', MavenPublishingExtension.class)
         rootProject.afterEvaluate {
+            if (ext.url == null || ext.url.isEmpty()) {
+                def output = new ByteArrayOutputStream()
+
+                exec {
+                    commandLine = ['git', 'remote', 'get-url', 'origin']
+                    standardOutput = output
+                }.assertNormalExitValue()
+
+                def remote = output.toString().trim();
+
+                while (true) {
+                    def githubMatcher = Pattern.compile("(?:git@github.com:|https://github.com/)(.+)(?:\\.git)?").matcher(remote)
+                    if (githubMatcher.matches()) {
+                        ext.url = "https://githubu.com/" + githubMatcher.group(1)
+                        break
+                    }
+
+                    ext.url = remote
+                    break
+                }
+            }
+            if (ext.scmUrl == null || ext.scmUrl.isEmpty()) {
+                ext.scmUrl = ext.url
+            }
+            if (ext.scmConnection == null || ext.scmConnection.isEmpty()) {
+                ext.scmConnection = "scm:git:" + ext.url
+            }
+            if (ext.scmDeveloperConnection == null || ext.scmDeveloperConnection.isEmpty()) {
+                ext.scmDeveloperConnection = "scm:git:" + ext.url
+            }
+            if (ext.developers == null || ext.developers.isEmpty()) {
+                def output = new ByteArrayOutputStream()
+
+                exec {
+                    commandLine = ['git', 'log', '--format=%an<%ae>', 'HEAD']
+                    standardOutput = output
+                }.assertNormalExitValue()
+
+                def lastCommitAuthor = output.toString().trim();
+                def matcher = Pattern.compile("(.+)<(.+)>").matcher(lastCommitAuthor)
+
+                if (matcher.matches()) {
+                    ext.developer(matcher.group(1), matcher.group(2))
+                } else {
+                    throw new RuntimeException("Failed to resolve developer information from last commit with " + lastCommitAuthor)
+                }
+            }
+            if (ext.licenses == null || ext.licenses.isEmpty()) {
+                def licenseFile = rootProject.file('LICENSE')
+                String name = 'UNLICENSE'
+                if (licenseFile.exists()) {
+                    def firstLine = Files.readAllLines(licenseFile.toPath())
+                            .stream()
+                            .map { it.trim() }
+                            .filter { !it.isEmpty() }
+                            .findFirst()
+                    if (firstLine.present) {
+                        name = firstLine.present
+                    }
+                }
+
+                ext.license(name, ext.url)
+            }
+
+
+            rootProject.allprojects {
+                pluginManager.withPlugin('maven-publish') {
+                    def currentProject = project
+                    if (currentProject.description == null || currentProject.description.isEmpty()) {
+                        currentProject.description = currentProject.name
+                    }
+
+                    def publishing = target.extensions.findByName('publishing') as PublishingExtension
+                    publishing.publications.withType(MavenPublication.class).configureEach {
+                        pom {
+                            name.set(artifactId)
+                            description.set(currentProject.description)
+
+                            url.set(ext.url)
+                            licenses {
+                                ext.licenses.forEach { lInfo ->
+                                    license {
+                                        name.set(lInfo.name)
+                                        url.set(lInfo.url)
+                                    }
+                                }
+                            }
+                            developers {
+                                ext.developers.forEach { dInfo ->
+                                    developer {
+                                        name.set(dInfo.name)
+                                        email.set(dInfo.email)
+                                        if (dInfo.organization != null) organization.set(dInfo.organization)
+                                        if (dInfo.organizationUrl != null) organization.set(dInfo.organizationUrl)
+                                    }
+                                }
+                            }
+                            scm {
+                                url.set(ext.scmUrl)
+                                connection.set(ext.scmConnection)
+                                developerConnection.set(ext.scmDeveloperConnection)
+                            }
+                        }
+                    }
+
+
+                    publishing.repositories {
+                        maven {
+                            name = 'MavenStage'
+                            url = cacheRepoLocation.toURI()
+                        }
+                    }
+                }
+            }
+        }
+
+
+        def cleanTask = rootProject.tasks.register('cleanMavenPublishingStage') {
+            doLast { cacheRepoLocation.deleteDir() }
+        }
+        rootProject.tasks.clean.dependsOn(cleanTask)
+
+        def packBundleTask = rootProject.tasks.register('packMavenPublishingStage', Zip.class) {
+            destinationDirectory.set(temporaryDir)
+            archiveFileName.set('bundle.zip')
+
+            from(cacheRepoLocation)
         }
     }
 }
