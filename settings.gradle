@@ -1,0 +1,10 @@
+rootProject.name = 'maven-center-publish'
+
+
+void loadModule(String module) {
+    include(':' + module)
+    project(':' + module).projectDir = new File(rootDir, 'modules/' + module)
+}
+
+
+loadModule('gradle-plugin')
