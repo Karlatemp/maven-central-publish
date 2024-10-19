@@ -56,16 +56,26 @@ class SigningSetupPlugin implements Plugin<Project> {
     @Override
     void apply(Project target) {
         def configuration = loadConfiguration(target)
+
+        target.pluginManager.withPlugin('signing') {
+            setup(target, configuration)
+        }
+
         if (configuration == null) {
-            target.logger.warn("Signing Setup Configuration not found. Please refer to https://TODO.TODO/TODO")
+            target.logger.warn("Signing Setup Configuration not found. Please refer to https://github.com/Karlatemp/maven-central-publish#gpg-setup")
+            target.logger.warn("Signatures are not automatically set unless you manually apply the signing plugin.")
             return
         }
 
         target.apply(plugin: 'signing')
+    }
 
-
+    static void setup(Project target, SignSetupConfiguration configuration) {
         def signingExt = target.extensions.getByName('signing') as SigningExtension
-        signingExt.useInMemoryPgpKeys(configuration.keyId, configuration.key, configuration.keyPassword)
+
+        if (configuration != null) {
+            signingExt.useInMemoryPgpKeys(configuration.keyId, configuration.key, configuration.keyPassword)
+        }
 
         /// Publications
         target.pluginManager.withPlugin('maven-publish') {

@@ -57,8 +57,28 @@ cermW8rb0eLpVD6EzZ/9vb++JddGm66qC3s3hSsza6EAvUuavA==
         void testPluginApply() {
             mainScript << """
 apply plugin: 'moe.karla.signing-setup'
+
+if (tasks.findByName('testSigning') != null)
+    throw new RuntimeException("Assertion Error: Signing should not be enabled")
 """
             runner().build()
+        }
+
+        @Test
+        void testPluginApplyWithSigning() {
+            mainScript << """
+apply plugin: 'signing'
+apply plugin: 'moe.karla.signing-setup'
+
+if (tasks.findByName('testSigning') == null)
+    throw new RuntimeException("Assertion Error: Plugin not applied")
+"""
+            runner().build()
+
+
+            runner()
+                    .withArguments('testSigning')
+                    .buildAndFail()
         }
 
         @Test
