@@ -15,7 +15,7 @@ plugins {
 
 # Configure the plugin
 
-> [!INFO]
+> [!TIP]
 >
 > You don't need to configure the plugin in `build.gradle`
 > if you used `moe.karla.signing-setup` only.
