@@ -15,6 +15,13 @@ plugins {
 
 # Configure the plugin
 
+> [!INFO]
+>
+> You don't need to configure the plugin in `build.gradle`
+> if you used `moe.karla.signing-setup` only.
+>
+> Just goto the `GPG Setup` section and setup GPG configurations.
+
 ## Recommended Configure
 
 ```groovy
@@ -129,16 +136,16 @@ publishing {
    > https://central.sonatype.org/register/central-portal/
 
 2. Goto your actions secrets settings.
-3. Create a secret named `MAVEN_CENTER_PUBLISH_PGP` with the content of `data.json`
-4. Create a secret named `MAVEN_CENTER_PUBLISH_ACCOUNT` with value `UserName:UserToken`
+3. Create a secret named `MAVEN_CENTRAL_PUBLISH_GPG` with the content of `data.json`
+4. Create a secret named `MAVEN_CENTRAL_PUBLISH_ACCOUNT` with value `UserName:UserToken`
 5. Change your workflow with
    ```yaml
    jobs:
      publish:
        runs-on: ubuntu-latest
        env:
-         SIGNING_SETUP: ${{ secrets.MAVEN_CENTER_PUBLISH_PGP }}
-         MAVEN_PUBLISH_PASSWORD: ${{ secrets.MAVEN_CENTER_PUBLISH_ACCOUNT }}
+         SIGNING_SETUP: ${{ secrets.MAVEN_CENTRAL_PUBLISH_GPG }}
+         MAVEN_PUBLISH_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PUBLISH_ACCOUNT }}
        steps:
          - uses: actions/checkout@v4
          - name: Set up JDK 21
