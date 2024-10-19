@@ -12,6 +12,9 @@ java {
 dependencies {
     implementation("com.google.code.gson:gson:2.11.0")
 
+    compileOnly("org.apache.httpcomponents:httpclient:4.5.13")
+    compileOnly("org.apache.httpcomponents:httpmime:4.5.13")
+
     testImplementation(gradleTestKit())
 }
 

@@ -23,7 +23,13 @@ apply plugin: 'java'
 group = 'moe.karla.mptest'
 version = '1.0.0'
 
+repositories {
+    mavenCentral()
+}
+
 mavenPublishing {
+    publishingType = moe.karla.maven.publishing.MavenPublishingExtension.PublishingType.USER_MANAGED
+
     url = 'https://github.com/Karlatemp/MavenPublishingTest'
     developer('Karlatemp', 'kar@kasukusakura.com')
 }
@@ -41,6 +47,7 @@ publishing {
                             'SIGNING_SETUP': getConfig(),
                     ])
                     .withArguments('publishAllPublicationsToMavenStageRepository', 'packMavenPublishingStage')
+                    .forwardOutput()
                     .build()
         }
 
