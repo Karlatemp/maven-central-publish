@@ -176,6 +176,7 @@ class MavenPublishingPlugin implements Plugin<Project> {
 
 
         rootProject.tasks.register('publishToMavenCentral', JavaExec.class) {
+            group = 'publishing'
             dependsOn(packBundleTask)
             inputs.files(packBundleTask.get().outputs.files)
 
@@ -199,8 +200,11 @@ class MavenPublishingPlugin implements Plugin<Project> {
                             ?: System.getProperty('maven.publish.password')
                             ?: ''
             )
-            environment('MAVEN_PUBLISH_PUBLISHING_TYPE', ext.publishingType.name())
-            environment('MAVEN_PUBLISH_PUBLISHING_NAME', rootProject.name)
+
+            doFirst {
+                environment('MAVEN_PUBLISH_PUBLISHING_NAME', rootProject.name)
+                environment('MAVEN_PUBLISH_PUBLISHING_TYPE', ext.publishingType.name())
+            }
         }
     }
 

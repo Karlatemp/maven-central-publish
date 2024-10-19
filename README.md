@@ -32,6 +32,9 @@ repositories {
 }
 
 mavenPublishing {
+    // Add This line if you want to verity your component before publishing.
+    publishingType = moe.karla.maven.publishing.MavenPublishingExtension.PublishingType.USER_MANAGED
+
     url = 'https://github.com/YourUserName/YourProject'
     developer('YourUserName', 'user@example.com')
 }
