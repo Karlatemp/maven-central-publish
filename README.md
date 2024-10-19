@@ -1,4 +1,4 @@
-# maven-center-publish
+# maven-central-publish
 
 Configure publication to Maven Central repository for Gradle projects with minimal effort.
 

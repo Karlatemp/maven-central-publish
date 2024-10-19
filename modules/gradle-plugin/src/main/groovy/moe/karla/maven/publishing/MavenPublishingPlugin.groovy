@@ -46,7 +46,7 @@ class MavenPublishingPlugin implements Plugin<Project> {
                 while (true) {
                     def githubMatcher = Pattern.compile("(?:git@github.com:|https://github.com/)(.+)(?:\\.git)?").matcher(remote)
                     if (githubMatcher.matches()) {
-                        ext.url = "https://githubu.com/" + githubMatcher.group(1)
+                        ext.url = "https://github.com/" + githubMatcher.group(1)
                         break
                     }
 
