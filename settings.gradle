@@ -1,4 +1,4 @@
-rootProject.name = 'maven-center-publish'
+rootProject.name = 'maven-central-publish'
 
 
 void loadModule(String module) {
@@ -7,4 +7,4 @@ void loadModule(String module) {
 }
 
 
-loadModule('gradle-plugin')
+loadModule('maven-central-publish-gradle-plugin')
