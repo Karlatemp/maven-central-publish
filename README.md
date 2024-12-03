@@ -13,6 +13,8 @@ plugins {
 }
 ```
 
+Goto [Gradle Plugin Portal](https://plugins.gradle.org/plugin/moe.karla.maven-publishing) to view the latest version.
+
 # Configure the plugin
 
 > [!TIP]
