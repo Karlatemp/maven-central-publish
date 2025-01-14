@@ -36,7 +36,7 @@ class MavenPublishingPlugin implements Plugin<Project> {
             if (ext.url == null || ext.url.isEmpty()) {
                 def output = new ByteArrayOutputStream()
 
-                exec {
+                rootProject.exec {
                     commandLine = ['git', 'remote', 'get-url', 'origin']
                     standardOutput = output
                 }.assertNormalExitValue()
@@ -66,7 +66,7 @@ class MavenPublishingPlugin implements Plugin<Project> {
             if (ext.developers == null || ext.developers.isEmpty()) {
                 def output = new ByteArrayOutputStream()
 
-                exec {
+                rootProject.exec {
                     commandLine = ['git', 'log', '--format=%an<%ae>', 'HEAD']
                     standardOutput = output
                 }.assertNormalExitValue()
