@@ -109,7 +109,7 @@ class MavenPublishingPlugin implements Plugin<Project> {
                         currentProject.description = currentProject.name
                     }
 
-                    def publishing = target.extensions.findByName('publishing') as PublishingExtension
+                    def publishing = currentProject.extensions.findByName('publishing') as PublishingExtension
                     publishing.publications.withType(MavenPublication.class).configureEach {
                         pom {
                             name.set(artifactId)
