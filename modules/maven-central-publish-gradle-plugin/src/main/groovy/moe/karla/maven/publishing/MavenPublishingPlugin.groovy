@@ -3,6 +3,7 @@ package moe.karla.maven.publishing
 import moe.karla.maven.publishing.signsetup.SignSetupConfiguration
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.JavaExec
@@ -22,6 +23,7 @@ class MavenPublishingPlugin implements Plugin<Project> {
             rootProject.apply plugin: MavenPublishingPlugin.class
             return
         }
+        rootProject.pluginManager.apply(BasePlugin.class)
 
         rootProject.allprojects {
             apply plugin: SigningSetupPlugin.class
