@@ -158,6 +158,8 @@ publishing {
    }
    ```
 
+   You can also use the provided script <code>[bash key-export.sh](./key-export.sh)</code> to generate this content. 
+
 4. (This step is only for validating signing setup) Open your user `gradle.properties`.
    Add `signing.setup.file=/path/to/your/data.json`.
    And then execute `gradle testSigning` in your project.
