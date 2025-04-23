@@ -35,13 +35,14 @@ plugins {
 
 group = 'moe.karla.mptest'
 version = '1.0.0'
+description = 'The Example Project. Project description is included in maven pom.'
 
 repositories {
     mavenCentral()
 }
 
 mavenPublishing {
-    // Add This line if you want to verity your component before publishing.
+    // Add This line if you want to verify your component before publishing.
     publishingType = moe.karla.maven.publishing.MavenPublishingExtension.PublishingType.USER_MANAGED
 
     url = 'https://github.com/YourUserName/YourProject'
@@ -80,6 +81,38 @@ publishing {
         }
     }
 }
+```
+
+## Manually Configure
+
+> This section is for people who want to set up maven pom manually
+
+```groovy
+plugins {
+   id 'java'
+   id 'moe.karla.maven-publishing'
+   id 'maven-publish'
+}
+
+mavenPublishing {
+   // Add This line if you want to verify your component before publishing.
+   publishingType = moe.karla.maven.publishing.MavenPublishingExtension.PublishingType.USER_MANAGED
+   manuallyPomSetup = true
+}
+
+publishing {
+   publications {
+      main(MavenPublication) {
+         from(project.components.java)
+         
+         pom {
+            // .....
+         }
+      }
+   }
+}
+
+
 ```
 
 ## GPG Setup
