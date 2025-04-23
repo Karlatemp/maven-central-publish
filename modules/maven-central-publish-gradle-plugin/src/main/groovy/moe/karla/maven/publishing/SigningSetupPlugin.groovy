@@ -11,9 +11,15 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 class SigningSetupPlugin implements Plugin<Project> {
+    private static final SignSetupConfiguration CONFIG_MANUALLY = new SignSetupConfiguration()
+
     private static final Gson GSON = new Gson()
 
     static SignSetupConfiguration loadConfiguration(Project project) {
+        if (project.findProperty("signing.manually") == "true") {
+            return CONFIG_MANUALLY
+        }
+
         String envFile = System.getenv('SIGNING_SETUP_FILE')
         if (envFile != null) {
             try (def reader = Files.newBufferedReader(Paths.get(envFile))) {
@@ -74,7 +80,11 @@ class SigningSetupPlugin implements Plugin<Project> {
         def signingExt = target.extensions.getByName('signing') as SigningExtension
 
         if (configuration != null) {
-            signingExt.useInMemoryPgpKeys(configuration.keyId, configuration.key, configuration.keyPassword)
+            if (configuration === CONFIG_MANUALLY) {
+                signingExt.useGpgCmd()
+            } else {
+                signingExt.useInMemoryPgpKeys(configuration.keyId, configuration.key, configuration.keyPassword)
+            }
         }
 
         /// Publications

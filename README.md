@@ -180,8 +180,22 @@ Add following values to your `gradle.properties`
 > https://docs.gradle.org/current/userguide/build_environment.html
 
 ```properties
-signing.setup.file=/path/to/your/data.json
+# Maven Central Setup
 maven.publish.password=UserName:UserToken
+
+# Local GPG Setup
+# Way 1: Setting up using CI configuration
+signing.setup.file=/path/to/your/data.json
+
+# Way 2: Setting up using local GPG command
+#
+# When you choose to use local GPG command to sign, you must set up the gradle signing settings manually.
+# See https://docs.gradle.org/current/userguide/signing_plugin.html#sec:using_gpg_agent
+#
+# NOTE: This option has the highest priority.
+# When you're testing your CI configuration. Run with following command:
+# ./gradlew testSigning -Psigning.manually=false
+signing.manually=true
 ```
 
 ## Registered Tasks
