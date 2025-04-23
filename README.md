@@ -117,7 +117,7 @@ publishing {
    {
       // NOTE: Don't write comments into your file.
    
-      // Don't drop line breaks. A empty line is required for gradle to read the key
+      // Don't drop line breaks. An empty line is required for gradle to read the key
       "key": "-----BEGIN PGP PRIVATE KEY BLOCK-----\n\n.....\n-----END PGP PRIVATE KEY BLOCK-----",
       "keyPassword": "The Password Of Your Key",
       // Optional. This field is optional. Used when you want to use a sub key to sign publications 
