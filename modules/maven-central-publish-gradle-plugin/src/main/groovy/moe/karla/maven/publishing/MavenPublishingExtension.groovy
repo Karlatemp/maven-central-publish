@@ -31,6 +31,13 @@ class MavenPublishingExtension {
      */
     public boolean automaticSourcesAndJavadoc = true
 
+    /**
+     * Manually setting up maven pom.
+     *
+     * Enabling this option, maven-central-publish will disable maven pom setup.
+     */
+    public boolean manuallyPomSetup = false
+
 
     ///////////////////////////
     // LICENSES
