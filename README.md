@@ -89,27 +89,27 @@ publishing {
 
 ```groovy
 plugins {
-   id 'java'
-   id 'moe.karla.maven-publishing'
-   id 'maven-publish'
+    id 'java'
+    id 'moe.karla.maven-publishing'
+    id 'maven-publish'
 }
 
 mavenPublishing {
-   // Add This line if you want to verify your component before publishing.
-   publishingType = moe.karla.maven.publishing.MavenPublishingExtension.PublishingType.USER_MANAGED
-   manuallyPomSetup = true
+    // Add This line if you want to verify your component before publishing.
+    publishingType = moe.karla.maven.publishing.MavenPublishingExtension.PublishingType.USER_MANAGED
+    manuallyPomSetup = true
 }
 
 publishing {
-   publications {
-      main(MavenPublication) {
-         from(project.components.java)
-         
-         pom {
-            // .....
-         }
-      }
-   }
+    publications {
+        main(MavenPublication) {
+            from(project.components.java)
+
+            pom {
+                // .....
+            }
+        }
+    }
 }
 
 
@@ -159,7 +159,7 @@ publishing {
    }
    ```
 
-   You can also use the provided script <code>[bash key-export.sh](./key-export.sh)</code> to generate this content. 
+   You can also use the provided script <code>[bash key-export.sh](./key-export.sh)</code> to generate this content.
 
 4. (This step is only for validating signing setup) Open your user `gradle.properties`.
    Add `signing.setup.file=/path/to/your/data.json`.
@@ -203,6 +203,19 @@ publishing {
          # - run: gradle packMavenPublishingStage
          - run: gradle publishToMavenCentral
    ```
+   In addition, you can specify the username and password separately for other scenarios where you need to separate the
+   username and password.
+   ```yaml 
+   jobs:
+     publish:
+     runs-on: ubuntu-latest
+     env:
+       SIGNING_SETUP: ${{ secrets.MAVEN_CENTRAL_PUBLISH_GPG }}
+       MAVEN_PUBLISH_USER:     ${{ secrets.MAVEN_CENTRAL_PUBLISH_USER }}
+       MAVEN_PUBLISH_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PUBLISH_TOKEN }}
+     steps:
+       - ...
+   ```
 
 ## Local Setup
 
@@ -218,11 +231,9 @@ Add following values to your `gradle.properties`
 ```properties
 # Maven Central Setup
 maven.publish.password=UserName:UserToken
-
 # Local GPG Setup
 # Way 1: Setting up using CI configuration
 signing.setup.file=/path/to/your/data.json
-
 # Way 2: Setting up using local GPG command
 #
 # When you choose to use local GPG command to sign, you must set up the gradle signing settings manually.
@@ -233,6 +244,25 @@ signing.setup.file=/path/to/your/data.json
 # ./gradlew testSigning -Psigning.manually=false
 signing.manually=true
 ```
+
+### The `signing.manually` property
+
+The `signing.manually` property control how maven-publishing setup GPG signing.
+
+You can define this behavior in the project level options via
+creating `gradle.properties` in your root project.
+
+Options can be separated by `,` to reference multiple options at once.
+
+| Flag Name | Description                                                                                    |
+|:----------|:-----------------------------------------------------------------------------------------------|
+| `notest`  | Disable registering `testSigning` task                                                         |
+| `nouse`   | Don't setup the signing extension <br/> Useful when you already setup the signing by yourself. |
+| `nopub`   | Disable automatic registering publications to the signing extension                            |
+| `gpgcmd`  | Use gpg agent. No effect if `nouse` applied.                                                   |
+| ---       |                                                                                                |
+| `true`    | Alias of `gpgcmd`                                                                              |
+| `all`     | Alias of `notest,nouse,nopub`                                                                  |
 
 ## Registered Tasks
 

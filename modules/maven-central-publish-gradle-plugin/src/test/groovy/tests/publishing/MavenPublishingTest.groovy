@@ -46,7 +46,7 @@ publishing {
                     .withEnvironment(System.getenv() + [
                             'SIGNING_SETUP': getConfig(),
                     ])
-                    .withArguments('publishAllPublicationsToMavenStageRepository', 'packMavenPublishingStage')
+                    .withArguments('publishAllPublicationsToMavenStageRepository', 'packMavenPublishingStage', '--stacktrace')
                     .forwardOutput()
                     .build()
         }

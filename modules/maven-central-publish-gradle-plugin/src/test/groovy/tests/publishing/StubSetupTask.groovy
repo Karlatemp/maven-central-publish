@@ -37,7 +37,7 @@ apply plugin: moe.karla.maven.publishing.PublishingStubsSetupPlugin
 
 
             runner()
-                    .withArguments('build', 'createMavenPublishingDummyStubJavadoc')
+                    .withArguments('build', 'createMavenPublishingDummyStubJavadoc', '--stacktrace')
                     .build()
         }
 
@@ -71,7 +71,7 @@ publishing {
 }
 """
             runner()
-                    .withArguments('publishAllPublicationsToTestRepoRepository')
+                    .withArguments('publishAllPublicationsToTestRepoRepository', '--stacktrace')
                     .build()
 
             //Files.walk(projectDir.resolve('repo')).forEach { println it }

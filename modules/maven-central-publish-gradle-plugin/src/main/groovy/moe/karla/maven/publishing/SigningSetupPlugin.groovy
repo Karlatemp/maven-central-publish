@@ -1,6 +1,7 @@
 package moe.karla.maven.publishing
 
 import com.google.gson.Gson
+import moe.karla.maven.publishing.signsetup.GpgFlags
 import moe.karla.maven.publishing.signsetup.SignSetupConfiguration
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -11,15 +12,22 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 class SigningSetupPlugin implements Plugin<Project> {
-    private static final SignSetupConfiguration CONFIG_MANUALLY = new SignSetupConfiguration()
-
     private static final Gson GSON = new Gson()
 
-    static SignSetupConfiguration loadConfiguration(Project project) {
-        if (project.findProperty("signing.manually") == "true") {
-            return CONFIG_MANUALLY
+    private static SignSetupConfiguration loadConfiguration(Project project) {
+        String signingManually = project.findProperty("signing.manually")
+        if (signingManually == null) {
+            return loadConfiguration0(project)
         }
+        SignSetupConfiguration conf = loadConfiguration0(project)
+        if (conf == null) {
+            conf = new SignSetupConfiguration()
+        }
+        conf.flags = GpgFlags.of(signingManually)
+        return conf
+    }
 
+    private static SignSetupConfiguration loadConfiguration0(Project project) {
         String envFile = System.getenv('SIGNING_SETUP_FILE')
         if (envFile != null) {
             try (def reader = Files.newBufferedReader(Paths.get(envFile))) {
@@ -78,9 +86,13 @@ class SigningSetupPlugin implements Plugin<Project> {
 
     static void setup(Project target, SignSetupConfiguration configuration) {
         def signingExt = target.extensions.getByName('signing') as SigningExtension
-
+        Set<GpgFlags> flags = Collections.emptySet()
         if (configuration != null) {
-            if (configuration === CONFIG_MANUALLY) {
+            flags = configuration.flags
+        }
+
+        if (configuration != null && !flags.contains(GpgFlags.DISABLE_SIGNING_EXT_SETUP)) {
+            if (flags.contains(GpgFlags.USE_GPG_CMD)) {
                 signingExt.useGpgCmd()
             } else {
                 signingExt.useInMemoryPgpKeys(configuration.keyId, configuration.key, configuration.keyPassword)
@@ -88,23 +100,27 @@ class SigningSetupPlugin implements Plugin<Project> {
         }
 
         /// Publications
-        target.pluginManager.withPlugin('maven-publish') {
-            def publishing = target.extensions.findByName('publishing') as PublishingExtension
-            publishing.publications.configureEach { publication ->
-                signingExt.sign(publication)
+        if (!flags.contains(GpgFlags.DISABLE_PUBLICATION_SIGNING)) {
+            target.pluginManager.withPlugin('maven-publish') {
+                def publishing = target.extensions.findByName('publishing') as PublishingExtension
+                publishing.publications.configureEach { publication ->
+                    signingExt.sign(publication)
+                }
             }
         }
 
         /// Test task
-        target.tasks.register('testSigning') {
-            doLast {
-                temporaryDir.mkdirs()
-                def file = new File(temporaryDir, 'temp.txt')
-                try (def writer = new FileWriter(file)) {
-                    writer.write(UUID.randomUUID().toString())
+        if (!flags.contains(GpgFlags.DISABLE_TEST_TASK)) {
+            target.tasks.register('testSigning') {
+                doLast {
+                    temporaryDir.mkdirs()
+                    def file = new File(temporaryDir, 'temp.txt')
+                    try (def writer = new FileWriter(file)) {
+                        writer.write(UUID.randomUUID().toString())
+                    }
+                    signingExt.sign(file).execute()
+                    println("Signing test passed")
                 }
-                signingExt.sign(file).execute()
-                println("Signing test passed")
             }
         }
     }

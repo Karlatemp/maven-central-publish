@@ -77,7 +77,7 @@ if (tasks.findByName('testSigning') == null)
 
 
             runner()
-                    .withArguments('testSigning')
+                    .withArguments('testSigning', '--stacktrace')
                     .buildAndFail()
         }
 
@@ -90,7 +90,7 @@ apply plugin: 'moe.karla.signing-setup'
                     .withEnvironment(System.getenv() + [
                             'SIGNING_SETUP': getConfig(),
                     ])
-                    .withArguments('testSigning')
+                    .withArguments('testSigning', '--stacktrace')
                     .forwardOutput()
                     .build()
         }
@@ -130,7 +130,7 @@ publishing {
                             'SIGNING_SETUP': getConfig(),
                     ])
                     .forwardOutput()
-                    .withArguments('publishAllPublicationsToTestRepoRepository')
+                    .withArguments('publishAllPublicationsToTestRepoRepository', '--stacktrace')
                     .build()
 
             Assertions.assertTrue(projectDir.resolve('repo/moe/karla/mptest/mptest/1.0.0/mptest-1.0.0.jar.asc').toFile().exists())
