@@ -16,15 +16,15 @@ import org.gradle.jvm.tasks.Jar
 class PublishingStubsSetupPlugin implements Plugin<Project> {
     private static final String STUB_JAVADOC_CONFIGURATION_NAME = 'mavenPublishingDummyStubJavadoc'
 
-    static NamedDomainObjectProvider<Configuration> createStubJavadocConfiguration(Project root) {
-        def configurations = root.configurations
+    static NamedDomainObjectProvider<Configuration> createStubJavadocConfiguration(Project target) {
+        def configurations = target.configurations
         try {
             return configurations.named(STUB_JAVADOC_CONFIGURATION_NAME)
         } catch (UnknownDomainObjectException ignored) {
         }
 
-        root.apply plugin: 'java-base'
-        def stubTask = root.tasks.register('createMavenPublishingDummyStubJavadoc', Jar.class) { Jar task ->
+        target.apply plugin: 'java-base'
+        def stubTask = target.tasks.register('createMavenPublishingDummyStubJavadoc', Jar.class) { Jar task ->
             task.group = 'publishing'
             task.archiveClassifier.set('javadoc')
             task.archiveBaseName.set('maven-publishing-stub')
@@ -36,17 +36,17 @@ class PublishingStubsSetupPlugin implements Plugin<Project> {
                 artifact(stubTask)
             }
             configuration.attributes {
-                attribute(Usage.USAGE_ATTRIBUTE, root.objects.named(Usage.class, "java-runtime"))
-                attribute(Category.CATEGORY_ATTRIBUTE, root.objects.named(Category.class, "documentation"))
-                attribute(Bundling.BUNDLING_ATTRIBUTE, root.objects.named(Bundling.class, "external"))
-                attribute(DocsType.DOCS_TYPE_ATTRIBUTE, root.objects.named(DocsType.class, DocsType.JAVADOC))
+                attribute(Usage.USAGE_ATTRIBUTE, target.objects.named(Usage.class, "java-runtime"))
+                attribute(Category.CATEGORY_ATTRIBUTE, target.objects.named(Category.class, "documentation"))
+                attribute(Bundling.BUNDLING_ATTRIBUTE, target.objects.named(Bundling.class, "external"))
+                attribute(DocsType.DOCS_TYPE_ATTRIBUTE, target.objects.named(DocsType.class, DocsType.JAVADOC))
             }
         }
     }
 
     @Override
     void apply(Project target) {
-        def stubConfig = createStubJavadocConfiguration(target.rootProject)
+        def stubConfig = createStubJavadocConfiguration(target)
 
 
         target.pluginManager.withPlugin('java') {
