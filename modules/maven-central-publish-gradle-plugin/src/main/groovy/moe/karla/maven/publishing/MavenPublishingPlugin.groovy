@@ -146,7 +146,7 @@ class MavenPublishingPlugin implements Plugin<Project> {
             def remote = cmdGit(rootProject, 'remote', 'get-url', 'origin').trim()
 
             while (true) {
-                def githubMatcher = Pattern.compile("(?:git@github.com:|https://github.com/)(.+)(?:\\.git)?").matcher(remote)
+                def githubMatcher = Pattern.compile("(?:git@github.com:|https://github.com/)(.+?)(?:\\.git)?").matcher(remote)
                 if (githubMatcher.matches()) {
                     ext.url = "https://github.com/" + githubMatcher.group(1)
                     break
