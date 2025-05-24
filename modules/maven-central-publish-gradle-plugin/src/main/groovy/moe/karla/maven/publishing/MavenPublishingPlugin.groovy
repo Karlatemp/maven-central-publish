@@ -1,5 +1,6 @@
 package moe.karla.maven.publishing
 
+import moe.karla.maven.publishing.internal.GitBaseValueSource
 import moe.karla.maven.publishing.signsetup.SignSetupConfiguration
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -86,35 +87,37 @@ class MavenPublishingPlugin implements Plugin<Project> {
         def jarMe = findJarMe()
 
 
-        rootProject.tasks.register('publishToMavenCentral', JavaExec.class) {
+        rootProject.tasks.register('publishToMavenCentral', JavaExec.class) { exec ->
             group = 'publishing'
             dependsOn(packBundleTask)
             inputs.files(packBundleTask.get().outputs.files)
 
             classpath = externalTaskConfiguration
             if (jarMe != null) {
-                classpath = classpath + rootProject.files(jarMe)
+                classpath = classpath + exec.project.files(jarMe)
             }
             mainClass.set('moe.karla.maven.publishing.advtask.UploadToMavenCentral')
 
             args(packBundleTask.get().outputs.files.singleFile.absolutePath)
 
-            environment('MAVEN_PUBLISH_USER',
-                    System.getenv('MAVEN_PUBLISH_USER')
-                            ?: rootProject.findProperty('maven.publish.user')
-                            ?: System.getProperty('maven.publish.user')
-                            ?: ''
-            )
-            environment('MAVEN_PUBLISH_PASSWORD',
-                    System.getenv('MAVEN_PUBLISH_PASSWORD')
-                            ?: rootProject.findProperty('maven.publish.password')
-                            ?: System.getProperty('maven.publish.password')
-                            ?: ''
-            )
+            def envs = [
+                    'MAVEN_PUBLISH_USER'           : exec.project.providers.environmentVariable('MAVEN_PUBLISH_USER')
+                            .orElse(exec.project.providers.gradleProperty('maven.publish.user'))
+                            .orElse(exec.project.providers.systemProperty('maven.publish.user'))
+                            .orElse(''),
+                    'MAVEN_PUBLISH_PASSWORD'       : exec.project.providers.environmentVariable('MAVEN_PUBLISH_PASSWORD')
+                            .orElse(exec.project.providers.gradleProperty('maven.publish.password'))
+                            .orElse(exec.project.providers.systemProperty('maven.publish.password'))
+                            .orElse(''),
+
+                    'MAVEN_PUBLISH_PUBLISHING_NAME': exec.project.provider { exec.project.name },
+                    'MAVEN_PUBLISH_PUBLISHING_TYPE': exec.project.provider { ext.publishingType.name() },
+            ]
 
             doFirst {
-                environment('MAVEN_PUBLISH_PUBLISHING_NAME', rootProject.name)
-                environment('MAVEN_PUBLISH_PUBLISHING_TYPE', ext.publishingType.name())
+                envs.forEach { key, value ->
+                    exec.environment(key, value.get())
+                }
             }
         }
     }
@@ -132,17 +135,15 @@ class MavenPublishingPlugin implements Plugin<Project> {
         return null
     }
 
+    private static String cmdGit(Project proj, String... args) {
+        return proj.providers.of(GitBaseValueSource.class) {
+            it.parameters.getArgs().addAll(args)
+        }.get()
+    }
 
     private static void initializeMissingProperties(Project rootProject, MavenPublishingExtension ext) {
         if (ext.url == null || ext.url.isEmpty()) {
-            def output = new ByteArrayOutputStream()
-
-            rootProject.exec {
-                commandLine = ['git', 'remote', 'get-url', 'origin']
-                standardOutput = output
-            }.assertNormalExitValue()
-
-            def remote = output.toString().trim();
+            def remote = cmdGit(rootProject, 'remote', 'get-url', 'origin').trim()
 
             while (true) {
                 def githubMatcher = Pattern.compile("(?:git@github.com:|https://github.com/)(.+)(?:\\.git)?").matcher(remote)
@@ -165,14 +166,7 @@ class MavenPublishingPlugin implements Plugin<Project> {
             ext.scmDeveloperConnection = "scm:git:" + ext.url
         }
         if (ext.developers == null || ext.developers.isEmpty()) {
-            def output = new ByteArrayOutputStream()
-
-            rootProject.exec {
-                commandLine = ['git', 'log', '--format=%an<%ae>', 'HEAD']
-                standardOutput = output
-            }.assertNormalExitValue()
-
-            def lastCommitAuthor = output.toString().trim();
+            def lastCommitAuthor = cmdGit(rootProject, 'show', '--format=%an<%ae>', 'HEAD').trim()
             def matcher = Pattern.compile("(.+)<(.+)>").matcher(lastCommitAuthor)
 
             if (matcher.matches()) {
