@@ -292,3 +292,71 @@ Test the signing configuration.
 2. Setup `mavenPublishing` in the root project.
 3. Apply `maven-publish` and configure publication on the modules you want to publish.
 
+
+## Kotlin Multiplatform
+
+```toml
+## rootProject/gradle/libs.versions.toml
+
+[libraries]
+androidLibrary = { id = "com.android.library", version.ref = "agp" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+
+
+mavenPublishing = { id = "moe.karla.maven-publishing", version = "1.3.1" }
+```
+
+```kotlin
+// rootProject/build.gradle.kts
+
+plugins {
+    alias(libs.plugins.androidLibrary) apply false
+    alias(libs.plugins.kotlinMultiplatform) apply false
+    // id("moe.karla.maven-publishing")
+    alias(libs.plugins.mavenPublishing)
+}
+
+mavenPublishing {
+    // Add This line if you want to verify your component before publishing.
+    publishingType = moe.karla.maven.publishing.MavenPublishingExtension.PublishingType.USER_MANAGED
+}
+```
+
+```kotlin
+// rootProject/library/build.gradle.kts
+
+
+plugins {
+   alias(libs.plugins.kotlinMultiplatform)
+   alias(libs.plugins.androidLibrary)
+   `maven-publish`
+}
+
+group = "moe.karla.mptest"
+version = "1.0.0"
+
+kotlin {
+   // ...
+}
+
+
+// NOTE:
+//      You don't need to configure the `publishing` extension.
+//      Everything you need was already completed by kotlin-multiplatform and the maven-publishing plugin
+//
+// Technology:
+//      publications: 
+//          Publications are registered automatically when you applied
+//          kotlinMultiplatform and `maven-publish`
+//      the `-sources.jar`:
+//          The sources jars are automatically registered by kotlinMultiplatform
+//      the `-javadoc.jar`:
+//          An empty stub javadoc jar will be attached to all available publications by
+//          maven-publishing plugin to pass central publishing rule
+//      the .asc sign files:
+//          maven-publishing plugin will register all publications to the signing extension
+//      the .pom:
+//          maven-publishing will fill all necessary fields to all publication pom files
+//publishing {
+//}
+```
