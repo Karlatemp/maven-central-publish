@@ -16,9 +16,13 @@ class StubSetupTask {
         project.getPluginManager().apply(PublishingStubsSetupPlugin.class)
 
         Project nestedProject = ProjectBuilder.builder().withParent(project).build()
+        nestedProject.getPluginManager().apply(PublishingStubsSetupPlugin.class)
 
-        Assertions.assertNotNull(project.tasks.findByName('createMavenPublishingDummyStubJavadoc'))
+        Assertions.assertNull(project.tasks.findByName('createMavenPublishingDummyStubJavadoc'))
         Assertions.assertNull(nestedProject.tasks.findByName('createMavenPublishingDummyStubJavadoc'))
+
+        nestedProject.pluginManager.apply('java')
+        Assertions.assertNotNull(nestedProject.tasks.findByName('createMavenPublishingDummyStubJavadoc'))
     }
 
     @Nested
@@ -33,6 +37,7 @@ include(':nested')
 """
             Files.createDirectories(projectDir.resolve('nested')).resolve('build.gradle') << """
 apply plugin: moe.karla.maven.publishing.PublishingStubsSetupPlugin
+apply plugin: 'java'
 """
 
 
