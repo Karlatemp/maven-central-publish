@@ -191,7 +191,7 @@ class MavenPublishingPlugin implements Plugin<Project> {
                         .filter { !it.isEmpty() }
                         .findFirst()
                 if (firstLine.present) {
-                    name = firstLine.present
+                    name = firstLine.get()
                 }
             }
 
