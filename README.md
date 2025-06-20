@@ -2,6 +2,30 @@
 
 Configure publication to Maven Central repository for Gradle projects with minimal effort.
 
+## Advantages and Features
+
+- **Simple**: The core part of this plugin is very simple. You can even embed the core content of this project directly
+  into your project configuration.
+- **Low conflict**: This plugin only uses Gradle's public API and does not involve any internal Gradle API. You can use
+  this plugin in many Gradle versions.
+- **Integrability**:
+    - The core work of this plugin is to add a temporary local goal to maven-publish. This means that you can add your
+      own target repository directly in maven-publish, and this plugin will not interfere with any of your custom target
+      repositories.
+    - Because this plugin directly uses maven-publish to handle publishing, this plugin can be easily used with other
+      projects that can use gradle to publish. <br/>
+      For example: `Java`, `Kotlin/JVM`, `Kotlin/Multiplatform`, `Android Library`
+- **CI Friendly**: Only 2 secrets required for processing publishing.
+- **Local Friendly**: Provide a global option to use your local gpg agent for publishing.
+- **Low Configuration**: Even if you don't define any information, this plugin can infer all the required information
+  from the repository and write it to the pom.
+- **Customizable**: Everything is configurable,
+  see [MavenPublishingExtension](./modules/maven-central-publish-gradle-plugin/src/main/groovy/moe/karla/maven/publishing/MavenPublishingExtension.groovy)
+- **Configuration Cache support**: This plugin
+  supports [gradle's configuration cache feature](https://docs.gradle.org/current/userguide/configuration_cache.html).
+
+---
+
 # Using this plugin
 
 ```groovy
