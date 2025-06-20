@@ -292,6 +292,27 @@ Test the signing configuration.
 2. Setup `mavenPublishing` in the root project.
 3. Apply `maven-publish` and configure publication on the modules you want to publish.
 
+## Android Library
+
+```diff
+ publishing {
+   publications {
+     release(MavenPublication) {
+       groupId = 'com.my-company'
+       artifactId = 'my-library'
+       version = '1.0'
+
+-      from(project.components.java)
+
++      afterEvaluate {
++        from(components.release)
++      }
+     }
+   }
+ }
+```
+
+https://developer.android.com/build/publish-library/upload-library#create-pub
 
 ## Kotlin Multiplatform
 
