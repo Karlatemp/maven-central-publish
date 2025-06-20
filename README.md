@@ -82,6 +82,35 @@ publishing {
 }
 ```
 
+```kotlin
+plugins {
+    java
+    id("moe.karla.maven-publishing")
+    `maven-publish`
+}
+
+group = "moe.karla.mptest"
+version = "1.0.0"
+description = "The Example Project. Project description is included in maven pom."
+
+mavenPublishing {
+    // Add This line if you want to verify your component before publishing.
+    publishingType = moe.karla.maven.publishing.MavenPublishingExtension.PublishingType.USER_MANAGED
+
+    url = "https://github.com/YourUserName/YourProject"
+    developer("YourUserName", "user@example.com")
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("maven") {
+            from(project.components["java"])
+        }
+    }
+}
+
+```
+
 ## Minimal Configure
 
 ```groovy
