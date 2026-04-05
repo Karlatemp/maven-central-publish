@@ -1,13 +1,13 @@
 package moe.karla.maven.publishing
 
 import moe.karla.maven.publishing.internal.GitBaseValueSource
+import moe.karla.maven.publishing.internal.upload.UploadToMavenCentralTask
 import moe.karla.maven.publishing.signsetup.SignSetupConfiguration
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
-import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.bundling.Zip
 
 import java.nio.file.Files
@@ -87,38 +87,26 @@ class MavenPublishingPlugin implements Plugin<Project> {
         def jarMe = findJarMe()
 
 
-        rootProject.tasks.register('publishToMavenCentral', JavaExec.class) { exec ->
-            group = 'publishing'
-            dependsOn(packBundleTask)
-            inputs.files(packBundleTask.get().outputs.files)
+        def propertyUserName = target.providers.environmentVariable('MAVEN_PUBLISH_USER')
+                .orElse(target.providers.gradleProperty('maven.publish.user'))
+                .orElse(target.providers.systemProperty('maven.publish.user'))
+                .orElse('')
+        def propertyPassword = target.providers.environmentVariable('MAVEN_PUBLISH_PASSWORD')
+                .orElse(target.providers.gradleProperty('maven.publish.password'))
+                .orElse(target.providers.systemProperty('maven.publish.password'))
+                .orElse('')
+        def publishingType = target.provider { ext.publishingType.name() }
 
-            classpath = externalTaskConfiguration
-            if (jarMe != null) {
-                classpath = classpath + exec.project.files(jarMe)
-            }
-            mainClass.set('moe.karla.maven.publishing.advtask.UploadToMavenCentral')
+        rootProject.tasks.register('publishToMavenCentral', UploadToMavenCentralTask.class) { exec ->
+            exec.group = 'publishing'
+            exec.dependsOn(packBundleTask)
 
-            args(packBundleTask.get().outputs.files.singleFile.absolutePath)
-
-            def envs = [
-                    'MAVEN_PUBLISH_USER'           : exec.project.providers.environmentVariable('MAVEN_PUBLISH_USER')
-                            .orElse(exec.project.providers.gradleProperty('maven.publish.user'))
-                            .orElse(exec.project.providers.systemProperty('maven.publish.user'))
-                            .orElse(''),
-                    'MAVEN_PUBLISH_PASSWORD'       : exec.project.providers.environmentVariable('MAVEN_PUBLISH_PASSWORD')
-                            .orElse(exec.project.providers.gradleProperty('maven.publish.password'))
-                            .orElse(exec.project.providers.systemProperty('maven.publish.password'))
-                            .orElse(''),
-
-                    'MAVEN_PUBLISH_PUBLISHING_NAME': exec.project.provider { exec.project.name },
-                    'MAVEN_PUBLISH_PUBLISHING_TYPE': exec.project.provider { ext.publishingType.name() },
-            ]
-
-            doFirst {
-                envs.forEach { key, value ->
-                    exec.environment(key, value.get())
-                }
-            }
+            exec.userName.set(propertyUserName)
+            exec.password.set(propertyPassword)
+            exec.publishingType.set(publishingType)
+            exec.publishingName.convention(exec.project.name)
+            exec.uploadFile.set(packBundleTask.flatMap { it.archiveFile })
+            exec.workerClasspath.from(externalTaskConfiguration)
         }
     }
 
