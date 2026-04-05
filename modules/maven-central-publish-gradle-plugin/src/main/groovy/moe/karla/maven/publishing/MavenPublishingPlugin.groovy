@@ -1,10 +1,12 @@
 package moe.karla.maven.publishing
 
 import moe.karla.maven.publishing.internal.GitBaseValueSource
+import moe.karla.maven.publishing.internal.upload.UploadToMavenCentralHelper
 import moe.karla.maven.publishing.internal.upload.UploadToMavenCentralTask
 import moe.karla.maven.publishing.signsetup.SignSetupConfiguration
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.repositories.PasswordCredentials
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
@@ -34,8 +36,19 @@ class MavenPublishingPlugin implements Plugin<Project> {
                 .dir('maven-publishing-stage')
                 .asFile
 
-
         def ext = rootProject.extensions.create('mavenPublishing', MavenPublishingExtension.class)
+
+        def propertyUserName = target.providers.environmentVariable('MAVEN_PUBLISH_USER')
+                .orElse(target.providers.gradleProperty('maven.publish.user'))
+                .orElse(target.providers.systemProperty('maven.publish.user'))
+                .orElse('')
+        def propertyPassword = target.providers.environmentVariable('MAVEN_PUBLISH_PASSWORD')
+                .orElse(target.providers.gradleProperty('maven.publish.password'))
+                .orElse(target.providers.systemProperty('maven.publish.password'))
+                .orElse('')
+        def publishingType = target.provider { ext.publishingType.name() }
+
+
         rootProject.afterEvaluate {
             if (!ext.manuallyPomSetup) {
                 initializeMissingProperties(rootProject, ext)
@@ -55,10 +68,28 @@ class MavenPublishingPlugin implements Plugin<Project> {
                         initializeProjectPomContents(currentProject, ext)
                     }
 
-                    publishing.repositories {
-                        maven {
+                    publishing.repositories { handler ->
+                        handler.maven {
                             name = 'MavenStage'
                             url = cacheRepoLocation.toURI()
+                        }
+
+                        if (String.valueOf(currentProject.version).endsWith("-SNAPSHOT")) {
+                            handler.maven {
+                                name = 'MavenSnapshot'
+                                url = 'https://central.sonatype.com/repository/maven-snapshots/'
+                                credentials(PasswordCredentials.class) { cred ->
+                                    try {
+                                        UploadToMavenCentralHelper.setupPasswordCredentials(
+                                                cred,
+                                                propertyUserName.getOrNull(),
+                                                propertyPassword.getOrNull(),
+                                        )
+                                    } catch (Throwable ignored) {
+                                        // suppress building failed
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -84,18 +115,6 @@ class MavenPublishingPlugin implements Plugin<Project> {
         ]
         def externalTaskConfiguration = rootProject.configurations.create('mavenPublishingExternalModuleClasspath')
         dependencies.forEach { externalTaskConfiguration.dependencies.add(rootProject.dependencies.create(it)) }
-        def jarMe = findJarMe()
-
-
-        def propertyUserName = target.providers.environmentVariable('MAVEN_PUBLISH_USER')
-                .orElse(target.providers.gradleProperty('maven.publish.user'))
-                .orElse(target.providers.systemProperty('maven.publish.user'))
-                .orElse('')
-        def propertyPassword = target.providers.environmentVariable('MAVEN_PUBLISH_PASSWORD')
-                .orElse(target.providers.gradleProperty('maven.publish.password'))
-                .orElse(target.providers.systemProperty('maven.publish.password'))
-                .orElse('')
-        def publishingType = target.provider { ext.publishingType.name() }
 
         rootProject.tasks.register('publishToMavenCentral', UploadToMavenCentralTask.class) { exec ->
             exec.group = 'publishing'

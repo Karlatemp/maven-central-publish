@@ -317,6 +317,28 @@ Options can be separated by `,` to reference multiple options at once.
 | `true`    | Alias of `gpgcmd`                                                                              |
 | `all`     | Alias of `notest,nouse,nopub`                                                                  |
 
+## Snapshot Versions
+
+When a project version number ends with `-SNAPSHOT`, maven-central-publish adds a MavenCentral Snapshot repository for
+publishing snapshot versions to MavenCentral.
+
+Note: Maven Central snapshots are only saved for 90 days.
+
+You can execute `gradle publishAllPublicationsToMavenSnapshotRepository` to publish your project to maven central
+snapshot repository.
+
+Please note the difference between `publishAllPublicationsToMavenStageRepository` and `publishToMavenCentral`.
+`MavenStage` and `publishToMavenCentral` are tasks specifically designed for publishing official releases; you cannot
+use these tasks to publish snapshot versions.
+
+> [!NOTE]
+>
+> You need to add the following repositories to get snapshot versions.
+>
+> `https://central.sonatype.com/repository/maven-snapshots/`
+>
+> See https://central.sonatype.org/publish/publish-portal-snapshots/#consuming-snapshot-releases-for-your-project
+
 ## Registered Tasks
 
 ### `gradle cleanMavenPublishingStage`
@@ -401,16 +423,16 @@ mavenPublishing {
 
 
 plugins {
-   alias(libs.plugins.kotlinMultiplatform)
-   alias(libs.plugins.androidLibrary)
-   `maven-publish`
+    alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.androidLibrary)
+    `maven-publish`
 }
 
 group = "moe.karla.mptest"
 version = "1.0.0"
 
 kotlin {
-   // ...
+    // ...
 }
 
 
