@@ -319,6 +319,8 @@ Options can be separated by `,` to reference multiple options at once.
 
 ## Snapshot Versions
 
+> Available since `1.4.0`
+
 When a project version number ends with `-SNAPSHOT`, maven-central-publish adds a MavenCentral Snapshot repository for
 publishing snapshot versions to MavenCentral.
 
@@ -399,7 +401,7 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 
 
-mavenPublishing = { id = "moe.karla.maven-publishing", version = "1.3.1" }
+mavenPublishing = { id = "moe.karla.maven-publishing", version = "1.4.0" }
 ```
 
 ```kotlin
